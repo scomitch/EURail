@@ -5,8 +5,7 @@ import model.*;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  *  Init Controller provides the main application functionality.
@@ -54,7 +53,10 @@ public class InitController extends JFrame {
             case 3:
                 //Plan Journey.
                 //First, let's parse all of our placemarks and routes into an Edge List Graph.
-                prepareGraph();
+                NetworkGraph graph = prepareGraph();
+                prepareGraphValues(graph);
+                String[] choices = menu.chooseStations();
+                calculateShortestDistance(graph, choices);
                 mainDecision();
             default:
                 System.out.println("Application Shutting Down. Goodbye.");
@@ -63,15 +65,23 @@ public class InitController extends JFrame {
         }
     }
 
+    private void prepareGraphValues(NetworkGraph graph) {
+        // We don't want duplicate graph values. Lets' fix that.
+        List<PlacemarkNode> placemarks = graph.getPlacemarks();
+        placemarks = new ArrayList<>(new LinkedHashSet<>(placemarks));
+        graph.setPlacemarks(placemarks);
+    }
+
     /**
      * The prepare graph function utilized all of our parsed placemarks and routes and populates them into a graph.
      */
     private NetworkGraph prepareGraph() {
         NetworkGraph graph = new NetworkGraph();
         List<Route> routes = parser.getRouteList();
-
         int val = -1;
         for(int i = 0; i < routes.size(); i++){
+            //There will be many stations in the array, some with the same name.
+            //We want their placemarkNode value to be the same.
             val = val + 1;
             PlacemarkNode node = new PlacemarkNode(val, routes.get(i).getLocationA().getName());
             val = val + 1;
@@ -81,6 +91,19 @@ public class InitController extends JFrame {
         }
 
         return graph;
+    }
+
+    public void calculateShortestDistance(NetworkGraph graph, String[] stations){
+        List<PlacemarkNode> nodes = graph.getPlacemarks();
+        PlacemarkNode foundNode = nodes.get(0);
+        for(PlacemarkNode node : nodes){
+            if(node.getName().equals(stations[0])){
+                System.out.println("Found node");
+                foundNode = node;
+                break;
+            }
+        }
+        graph.dijkstra(foundNode, stations[1]);
     }
 
     public void drawStations() throws IOException {

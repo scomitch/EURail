@@ -51,6 +51,8 @@ public class NetworkGraph {
         return this.placemarks;
     }
 
+    public void setPlacemarks(List<PlacemarkNode> placemarks) { this.placemarks = placemarks; }
+
 
     public void printEdges(){
         // Loop through nodes in the connectionsMap.
@@ -63,8 +65,74 @@ public class NetworkGraph {
         }
     }
 
-    public boolean hasEdge(PlacemarkNode pointA, PlacemarkNode pointB){
-        return connectionMap.containsKey(pointA) && connectionMap.get(pointA).contains(pointB);
+    public RouteEdge hasEdge(PlacemarkNode pointA, PlacemarkNode pointB){
+        for(RouteEdge edge : routes){
+            if(edge.getPointA().getName().equals(pointA.getName()) && edge.getPointB().getName().equals(pointB.getName())){
+                return edge;
+            }
+        }
+        return null;
+    }
+
+    public int minDistance(int dist[], Boolean shortestPathSet[]){
+        int min = Integer.MAX_VALUE;
+        int minIndex = -1;
+
+        for(int i = 0; i < placemarks.size(); i++){
+            if(!shortestPathSet[i] && dist[i] <= min){
+                min = dist[i];
+                minIndex = i;
+            }
+        }
+
+        return minIndex;
+    }
+
+    public void dijkstra(PlacemarkNode source, String end){
+        int dist[] = new int[placemarks.size()];
+
+        Boolean sptSet[] = new Boolean[placemarks.size()];
+
+        for(int i = 0; i < placemarks.size(); i++){
+            if(placemarks.get(i) == source){
+                dist[i] = 0;
+            } else {
+                dist[i] = Integer.MAX_VALUE;
+            }
+            sptSet[i] = false;
+        }
+
+        for(int count = 0; count < placemarks.size() - 1; count++){
+            int u = minDistance(dist, sptSet);
+            sptSet[u] = true;
+
+            for(int v = 0; v < placemarks.size(); v++){
+                boolean stop = true;
+                PlacemarkNode pmA = placemarks.get(u);
+                PlacemarkNode pmB = placemarks.get(v);
+                RouteEdge e = hasEdge(pmA, pmB);
+                if(!sptSet[v] && e != null && (dist[u] + e.getWeight()) < dist[v]){
+                    dist[v] = dist[u] + e.getWeight();
+                    if(pmA.getName().equals(end) || pmB.getName().equals(end)){
+                        System.out.println("The path with the smallest weight between " + source.getName() + " and " + end + " is " + dist[v]);
+                        break;
+                    }
+                }
+            }
+        }
+
+        printSolution(dist, source);
+
+    }
+
+    public void printSolution(int[] dis, PlacemarkNode source) {
+        System.out.println("Vertex distance from source " + source.getName());
+
+        for (int i = 0; i < dis.length; i++) {
+            System.out.println(i + " tt " + dis[i]);
+            System.out.println(source.getName() + " to " + placemarks.get(i).getName() + " has travel time of " + dis[i] + " minutes...");
+        }
+        System.out.println();
     }
 
     public void depthFirstSearch(PlacemarkNode target){

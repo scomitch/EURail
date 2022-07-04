@@ -29,4 +29,6 @@ public class PlacemarkNode {
     public String getName(){
         return this.name;
     }
+
+    public int getN() { return this.n; }
 }
